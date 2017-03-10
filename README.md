@@ -1,11 +1,7 @@
 # Gracefully shutdown using context.Context and sync.WaitGroup
 
-[![Build Status](https://travis-ci.org/zhangpeihao/shutdown.svg?branch=master)](https://travis-ci.org/zhangpeihao/shutdown) 
-[![Coverage Status](https://coveralls.io/repos/github/zhangpeihao/shutdown/badge.svg?branch=master)](https://coveralls.io/github/zhangpeihao/shutdown?branch=master)
 [![GoDoc](https://godoc.org/github.com/zhangpeihao/shutdown?status.svg)](https://godoc.org/github.com/zhangpeihao/shutdown)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zhangpeihao/shutdown)](https://goreportcard.com/report/github.com/zhangpeihao/shutdown)
-[![Code Climate](https://codeclimate.com/github/zhangpeihao/shutdown/badges/gpa.svg)](https://codeclimate.com/github/zhangpeihao/shutdown)
-[![Image Size](https://images.microbadger.com/badges/image/zhangpeihao/shutdown.svg)](https://microbadger.com/images/zhangpeihao/shutdown "Get your own image badge on microbadger.com")
 
 ## Example
 
@@ -30,6 +26,8 @@
 				// ...
 			}
 		}
+		
+		// Some close processes
 	}(ctx)
 
 	// Wait interrupt signal
