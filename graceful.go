@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -14,7 +15,7 @@ import (
 type ContextKey string
 
 // CloseFunc close function
-type CloseFunc func(time.Duration)
+type CloseFunc func(time.Duration) error
 
 const (
 	// ContextCancel cancel func value name in context
@@ -34,6 +35,8 @@ var (
 	ErrExitWaitGroupValueTypeError = errors.New("exitWaitGroup value in context type error")
 	// ErrShutdownTimeout shutdown timeout
 	ErrShutdownTimeout = errors.New("shutdown timeout")
+	// TerminationSignals 退出信号量.
+	TerminationSignals = []os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT}
 )
 
 // NewContext create new context
@@ -87,10 +90,9 @@ func Shutdown(ctx context.Context, shutdownTimeout time.Duration, closeFunc Clos
 
 // WaitAndShutdown shutdown gracefully
 func WaitAndShutdown(ctx context.Context, shutdownTimeout time.Duration, closeFunc CloseFunc) error {
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt)
-	<-sig
-	return Shutdown(ctx, shutdownTimeout, closeFunc)
+	return WaitTerminationSignal(shutdownTimeout, func(timeout time.Duration) error {
+		return Shutdown(ctx, timeout, closeFunc)
+	})
 }
 
 // ExitWaitGroupAdd waitgroup counter adds delta
@@ -119,4 +121,16 @@ func ExitWaitGroupDone(ctx context.Context) error {
 	}
 	exitWaitGroup.Done()
 	return nil
+}
+
+// WaitTerminationSignal 等待退出信号
+func WaitTerminationSignal(timeout time.Duration, fn CloseFunc) error {
+	terminationSignalsCh := make(chan os.Signal, 1)
+	signal.Notify(terminationSignalsCh, TerminationSignals...)
+	defer func() {
+		signal.Stop(terminationSignalsCh)
+		close(terminationSignalsCh)
+	}()
+	<-terminationSignalsCh
+	return fn(timeout)
 }
