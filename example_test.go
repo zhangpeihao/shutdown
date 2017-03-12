@@ -31,7 +31,9 @@ func ExampleShutdown() {
 	}(ctx)
 
 	// Wait interrupt signal and shutdown gracefully
-	if err := WaitAndShutdown(ctx, time.Second*5); err != nil {
+	if err := WaitAndShutdown(ctx, time.Second*5, func(timeout time.Duration) {
+		log.Println("close")
+	}); err != nil {
 		log.Println("Shutdown error:", err)
 		return
 	}

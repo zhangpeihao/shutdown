@@ -13,6 +13,9 @@ import (
 // ContextKey context key type
 type ContextKey string
 
+// CloseFunc close function
+type CloseFunc func(time.Duration)
+
 const (
 	// ContextCancel cancel func value name in context
 	ContextCancel ContextKey = "shutdown/cancel"
@@ -44,7 +47,7 @@ func NewContext() (ctx context.Context) {
 }
 
 // Shutdown shutdown gracefully
-func Shutdown(ctx context.Context, shutdownTimeout time.Duration) error {
+func Shutdown(ctx context.Context, shutdownTimeout time.Duration, closeFunc CloseFunc) error {
 	value := ctx.Value(ContextCancel)
 	if value == nil {
 		return ErrNoCancel
@@ -64,6 +67,9 @@ func Shutdown(ctx context.Context, shutdownTimeout time.Duration) error {
 	exitSignal := make(chan struct{})
 	go func() {
 		cancel()
+		if closeFunc != nil {
+			closeFunc(shutdownTimeout)
+		}
 		exitWaitGroup.Wait()
 		exitSignal <- struct{}{}
 	}()
@@ -80,11 +86,11 @@ func Shutdown(ctx context.Context, shutdownTimeout time.Duration) error {
 }
 
 // WaitAndShutdown shutdown gracefully
-func WaitAndShutdown(ctx context.Context, shutdownTimeout time.Duration) error {
+func WaitAndShutdown(ctx context.Context, shutdownTimeout time.Duration, closeFunc CloseFunc) error {
 	sig := make(chan os.Signal)
 	signal.Notify(sig, os.Interrupt)
 	<-sig
-	return Shutdown(ctx, shutdownTimeout)
+	return Shutdown(ctx, shutdownTimeout, closeFunc)
 }
 
 // ExitWaitGroupAdd waitgroup counter adds delta

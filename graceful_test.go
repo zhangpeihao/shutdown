@@ -27,7 +27,9 @@ func TestGraceful(t *testing.T) {
 	}
 	// Shutdown after 2 seconds
 	time.Sleep(time.Second * 2)
-	if err := Shutdown(ctx, time.Second*5); err != nil {
+	if err := Shutdown(ctx, time.Second*5, func(timeout time.Duration) {
+		log.Println("close")
+	}); err != nil {
 		t.Error("GracefulShutdown error:", err)
 		return
 	}
