@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
 	"time"
 )
@@ -75,6 +77,14 @@ func Shutdown(ctx context.Context, shutdownTimeout time.Duration) error {
 		return err
 	}
 	return nil
+}
+
+// WaitAndShutdown shutdown gracefully
+func WaitAndShutdown(ctx context.Context, shutdownTimeout time.Duration) error {
+	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt)
+	<-sig
+	return Shutdown(ctx, shutdownTimeout)
 }
 
 // ExitWaitGroupAdd waitgroup counter adds delta

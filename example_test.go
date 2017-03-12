@@ -3,8 +3,6 @@ package shutdown
 import (
 	"context"
 	"log"
-	"os"
-	"os/signal"
 	"time"
 )
 
@@ -32,11 +30,8 @@ func ExampleShutdown() {
 		}
 	}(ctx)
 
-	// Wait interrupt signal
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt)
-	<-sig
-	if err := Shutdown(ctx, time.Second*5); err != nil {
+	// Wait interrupt signal and shutdown gracefully
+	if err := WaitAndShutdown(ctx, time.Second*5); err != nil {
 		log.Println("Shutdown error:", err)
 		return
 	}
